@@ -29,6 +29,7 @@ type Props = {
   keyboardOpeningTime: number,
   children?: Node,
   bounces?: boolean,
+  style?: ____ViewStyleProp_Internal,
   contentContainerStyle?: ____ViewStyleProp_Internal,
   refreshControl?: any,
 };
@@ -193,6 +194,7 @@ export class KeyboardAwareScrollView extends PureComponent<Props, *> {
         animatedValue,
         children,
         bounces,
+        style,
         contentContainerStyle,
         refreshControl,
       },
@@ -214,6 +216,7 @@ export class KeyboardAwareScrollView extends PureComponent<Props, *> {
       keyboardShouldPersistTaps: 'handled',
       children,
       bounces,
+      style,
       contentContainerStyle,
       refreshControl,
     };
