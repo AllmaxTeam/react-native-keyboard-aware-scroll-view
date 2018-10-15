@@ -84,6 +84,7 @@ export class KeyboardAwareScrollView extends PureComponent<Props, *> {
     const { bottomOffset, disableAutomaticScroll } = this.props;
     this.setState(() => ({ keyboardSpace: frames.endCoordinates.height - bottomOffset }));
     if (!disableAutomaticScroll) {
+      // $FlowFixMe
       const currentlyFocusedField = TextInput.State.currentlyFocusedField();
       const responder = this.getScrollResponder();
       if (!currentlyFocusedField || !responder) {
