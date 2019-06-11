@@ -3,11 +3,13 @@ import React, {
   ReactNode,
   ClassAttributes,
   memo,
+  forwardRef,
   useRef,
   useState,
   useCallback,
   useMemo,
   useLayoutEffect,
+  useImperativeHandle,
 } from 'react';
 import ReactNative, {
   ViewStyle,
@@ -42,9 +44,10 @@ interface Props {
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
   refreshControl?: ReactElement;
+  ref?: any;
 }
 
-export const KeyboardAwareScrollView = memo<Props>(({
+export const KeyboardAwareScrollView = memo<Props>(forwardRef<any, Props>(({
   extraHeight = 75,
   extraScrollHeight = 0,
   bottomOffset = 0,
@@ -59,7 +62,7 @@ export const KeyboardAwareScrollView = memo<Props>(({
   style,
   contentContainerStyle,
   refreshControl,
-}) => {
+}, ref) => {
   const isBlockNextScrollToResetCoordsRef = useRef<boolean>(false);
   const positionRef = useRef<Coords>({ x: 0, y: 0 });
   const resetCoordsRef = useRef<Coords | undefined>(resetScrollToCoords);
@@ -157,9 +160,9 @@ export const KeyboardAwareScrollView = memo<Props>(({
     scrollToFocusedInputWithNodeHandle,
   ]);
 
-  // const blockScrollToDefaultResetCoords = useCallback(() => {
-  //   isBlockNextScrollToResetCoordsRef.current = true;
-  // }, []);
+  const blockScrollToDefaultResetCoords = useCallback(() => {
+    isBlockNextScrollToResetCoordsRef.current = true;
+  }, []);
 
   const scrollToPosition = useCallback((x: number, y: number, animated: boolean = false) => {
     const responder = getScrollResponder();
@@ -195,12 +198,12 @@ export const KeyboardAwareScrollView = memo<Props>(({
     }
   }, [bottomInset, scrollToPosition]);
 
-  // const scrollToEnd = useCallback((animated?: boolean) => {
-  //   const responder = getScrollResponder();
-  //   if (responder != null) {
-  //     (responder as any).scrollResponderScrollToEnd({ animated });
-  //   }
-  // }, [getScrollResponder]);
+  const scrollToEnd = useCallback((animated?: boolean) => {
+    const responder = getScrollResponder();
+    if (responder != null) {
+      (responder as any).scrollResponderScrollToEnd({ animated });
+    }
+  }, [getScrollResponder]);
 
   const onScrollViewScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
     positionRef.current = event.nativeEvent.contentOffset;
@@ -228,6 +231,13 @@ export const KeyboardAwareScrollView = memo<Props>(({
       keyboardWillHideListener.remove();
     };
   }, [animatedValue, updateKeyboardSpace, resetKeyboardSpace]);
+
+  useImperativeHandle(ref, () => ({
+    scrollToFocusedInput,
+    scrollToPosition,
+    scrollToEnd,
+    blockScrollToDefaultResetCoords,
+  }), [scrollToFocusedInput, scrollToPosition, scrollToEnd, blockScrollToDefaultResetCoords]);
 
   const contentInset = useMemo(() => ({
     bottom: keyboardSpace,
@@ -259,4 +269,4 @@ export const KeyboardAwareScrollView = memo<Props>(({
       {...commonProps}
     />
   );
-});
+}));
