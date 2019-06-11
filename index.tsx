@@ -1,40 +1,44 @@
-/**
- * Created by Bardiaswift
- *
- * @flow
- */
+import React, {
+  ReactElement,
+  ReactNode,
+  PureComponent,
+} from 'react';
+import ReactNative, {
+  ViewStyle,
+  ScrollView,
+  Animated,
+  TextInput,
+  Keyboard,
+  UIManager,
+} from 'react-native';
 
-import React, { PureComponent, type Node } from 'react';
-import type { ElementRef } from 'react';
-import ReactNative, { ScrollView, Animated, TextInput, Keyboard, UIManager } from 'react-native';
+interface Coords {
+  x: number;
+  y: number;
+}
 
-import type {
-  ____ViewStyleProp_Internal,
-} from 'react-native/Libraries/StyleSheet/StyleSheetTypes';
+interface Props {
+  extraHeight: number;
+  extraScrollHeight: number;
+  bottomOffset: number;
+  bottomInset: number;
+  resetScrollToCoords?: Coords;
+  disableAutomaticScroll?: boolean;
+  onScroll?: Function;
+  animatedValue?: Animated.Value;
+  keyboardOpeningTime: number;
+  children?: Node;
+  bounces?: boolean;
+  style?: ViewStyle;
+  contentContainerStyle?: ViewStyle;
+  refreshControl?: ReactElement;
+}
 
-type Coords = {
-  x: number,
-  y: number,
-};
+interface State {
+  keyboardSpace: number;
+}
 
-type Props = {
-  extraHeight: number,
-  extraScrollHeight: number,
-  bottomOffset: number,
-  bottomInset: number,
-  resetScrollToCoords?: Coords,
-  disableAutomaticScroll?: boolean,
-  onScroll?: Function,
-  animatedValue?: Animated.Value,
-  keyboardOpeningTime: number,
-  children?: Node,
-  bounces?: boolean,
-  style?: ____ViewStyleProp_Internal,
-  contentContainerStyle?: ____ViewStyleProp_Internal,
-  refreshControl?: any,
-};
-
-export class KeyboardAwareScrollView extends PureComponent<Props, *> {
+export class KeyboardAwareScrollView extends PureComponent<Props, State> {
   static defaultProps = {
     extraHeight: 75,
     extraScrollHeight: 0,
@@ -43,12 +47,12 @@ export class KeyboardAwareScrollView extends PureComponent<Props, *> {
     keyboardOpeningTime: 250,
   }
 
-  scrollView: ?Object
-  isBlockNextScrollToResetCoords = false
-  position = { x: 0, y: 0 }
-  resetCoords: ?Coords
-  defaultResetScrollToCoords: ?Coords
-  keyboardListeners = []
+  scrollView: any;
+  isBlockNextScrollToResetCoords = false;
+  position = { x: 0, y: 0 };
+  resetCoords: Coords | undefined;
+  defaultResetScrollToCoords: Coords | undefined
+  keyboardListeners = [];
 
   state = {
     keyboardSpace: this.props.bottomInset,
@@ -80,7 +84,7 @@ export class KeyboardAwareScrollView extends PureComponent<Props, *> {
     this.isBlockNextScrollToResetCoords = true;
   }
 
-  updateKeyboardSpace = (frames: { endCoordinates: { height: number, screenY: number } }) => {
+  updateKeyboardSpace = (frames: { endCoordinates: { height: number; screenY: number } }) => {
     const { bottomOffset, disableAutomaticScroll } = this.props;
     this.setState(() => ({ keyboardSpace: frames.endCoordinates.height - bottomOffset }));
     if (!disableAutomaticScroll) {

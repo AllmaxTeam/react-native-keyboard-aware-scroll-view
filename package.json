@@ -1,11 +1,11 @@
 {
-  "name": "react-native-keyboard-aware-scroll-view",
-  "version": "0.4.1",
-  "description": "A React Native ScrollView component that resizes when the keyboard appears.",
-  "main": "index.js",
+  "name": "react-native-keyboard-adjusted-scroll-view",
+  "version": "3.0.0",
+  "description": "A React Native ScrollView component that scrolls when the keyboard appears.",
+  "main": "index.tsx",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/APSL/react-native-keyboard-aware-scroll-view.git"
+    "url": "git+https://github.com/AllmaxTeam/react-native-keyboard-aware-scroll-view.git"
   },
   "tags": [
     "react",
@@ -26,7 +26,25 @@
   "author": "Alvaro Medina Ballester <me@alvaromb.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/APSL/react-native-keyboard-aware-scroll-view/issues"
+    "url": "https://github.com/AllmaxTeam/react-native-keyboard-aware-scroll-view/issues"
   },
-  "homepage": "https://github.com/APSL/react-native-keyboard-aware-scroll-view#readme"
+  "homepage": "https://github.com/AllmaxTeam/react-native-keyboard-aware-scroll-view#readme",
+  "peerDependencies": {
+    "react": ">=16.8.3",
+    "react-native": ">=0.59.9"
+  },
+  "devDependencies": {
+    "@react-native-community/eslint-config": "^0.0.5",
+    "@types/react": "^16.8.18",
+    "@types/react-native": "^0.57.60",
+    "@typescript-eslint/eslint-plugin": "^1.9.0",
+    "@typescript-eslint/parser": "^1.9.0",
+    "eslint": "5.16.0",
+    "eslint-config-airbnb": "17.1.0",
+    "eslint-plugin-import": "2.17.2",
+    "eslint-plugin-jsx-a11y": "6.2.1",
+    "react": "^16.8.3",
+    "react-native": "^0.59.9",
+    "typescript": "^3.5.1"
+  }
 }
