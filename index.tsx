@@ -47,7 +47,7 @@ interface Props {
   ref?: any;
 }
 
-export const KeyboardAwareScrollView = memo<Props>(forwardRef<any, Props>(({
+export const KeyboardAdjustedScrollView = memo<Props>(forwardRef<any, Props>(({
   extraHeight = 75,
   extraScrollHeight = 0,
   bottomOffset = 0,
