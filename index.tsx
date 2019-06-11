@@ -39,7 +39,7 @@ interface Props {
   onScroll?: Function;
   animatedValue?: Animated.Value;
   keyboardOpeningTime?: number;
-  children?: Node;
+  children?: ReactNode;
   bounces?: boolean;
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
