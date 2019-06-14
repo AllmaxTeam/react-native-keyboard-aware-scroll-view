@@ -13,6 +13,7 @@ import React, {
 } from 'react';
 import ReactNative, {
   ViewStyle,
+  LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
   ScrollViewProps,
@@ -24,17 +25,11 @@ import ReactNative, {
   UIManager,
 } from 'react-native';
 
-interface Coords {
-  x: number;
-  y: number;
-}
-
 interface Props {
   extraHeight?: number;
   extraScrollHeight?: number;
   bottomOffset?: number;
   bottomInset?: number;
-  resetScrollToCoords?: Coords;
   onScroll?: Function;
   animatedValue?: Animated.Value;
   keyboardOpeningTime?: number;
@@ -52,17 +47,11 @@ export interface KeyboardAdjustedScrollViewHandle {
   ) => void;
   scrollToPosition: (x: number, y: number, animated?: boolean) => void;
   scrollToEnd: (animated?: boolean) => void;
-  blockScrollToDefaultResetCoords: () => void;
 }
 
 interface CommonScrollViewProps extends ScrollViewProps, ClassAttributes<ScrollView> {
   children: ReactNode;
 }
-
-const initialCoords: Coords = {
-  x: 0,
-  y: 0,
-};
 
 export const KeyboardAdjustedScrollView = memo(
   forwardRef<KeyboardAdjustedScrollViewHandle, Props>(({
@@ -75,15 +64,13 @@ export const KeyboardAdjustedScrollView = memo(
     onScroll,
     children,
     bounces,
-    resetScrollToCoords,
     style,
     contentContainerStyle,
     refreshControl,
   }, ref) => {
-    const isBlockNextScrollToResetCoordsRef = useRef<boolean>(false);
-    const positionRef = useRef<Coords>(initialCoords);
-    const resetCoordsRef = useRef<Coords | undefined>(resetScrollToCoords);
-    const defaultResetScrollToCoordsRef = useRef<Coords | null>(null);
+    const heightRef = useRef<number>(0);
+    const contentHeightRef = useRef<number>(0);
+    const yOffsetRef = useRef<number>(0);
     const scrollViewRef = useRef<ScrollView>(null);
 
     const [keyboardSpace, setKeyboardSpace] = useState<number>(bottomInset);
@@ -143,7 +130,8 @@ export const KeyboardAdjustedScrollView = memo(
     const updateKeyboardSpace = useCallback(({
       endCoordinates,
     }: KeyboardEvent) => {
-      setKeyboardSpace(endCoordinates.height - bottomOffset);
+      const nextKeyboardSpace = endCoordinates.height - bottomOffset;
+      setKeyboardSpace(nextKeyboardSpace);
       if (extraScrollHeight != null) {
         const currentlyFocusedField = TextInput.State.currentlyFocusedField();
         const responder = getScrollResponder();
@@ -165,28 +153,6 @@ export const KeyboardAdjustedScrollView = memo(
           );
         }
       }
-
-      const {
-        current: resetCoords,
-      } = resetCoordsRef;
-      if (resetCoords == null) {
-        const {
-          current: isBlockNextScrollToResetCoords,
-        } = isBlockNextScrollToResetCoordsRef;
-        if (!isBlockNextScrollToResetCoords) {
-          const {
-            current: defaultResetScrollToCoords,
-          } = defaultResetScrollToCoordsRef;
-          if (defaultResetScrollToCoords == null) {
-            const {
-              current: position,
-            } = positionRef;
-            defaultResetScrollToCoordsRef.current = position;
-          }
-        } else {
-          isBlockNextScrollToResetCoordsRef.current = false;
-        }
-      }
     }, [
       bottomOffset,
       extraScrollHeight,
@@ -199,42 +165,44 @@ export const KeyboardAdjustedScrollView = memo(
 
     const resetKeyboardSpace = useCallback(() => {
       const {
-        current: resetCoords,
-      } = resetCoordsRef;
+        current: height,
+      } = heightRef;
+      const {
+        current: contentHeight,
+      } = contentHeightRef;
+      const {
+        current: yOffset,
+      } = yOffsetRef;
       setKeyboardSpace(bottomInset);
-      if (resetCoords != null) {
-        const { x, y } = resetCoords;
-        scrollToPosition(x, y, true);
-      } else {
-        const {
-          current: isBlockNextScrollToResetCoords,
-        } = isBlockNextScrollToResetCoordsRef;
-        if (!isBlockNextScrollToResetCoords) {
-          const {
-            current: defaultResetScrollToCoords,
-          } = defaultResetScrollToCoordsRef;
-          if (defaultResetScrollToCoords != null) {
-            const { x, y } = defaultResetScrollToCoords;
-            scrollToPosition(x, y, true);
-            defaultResetScrollToCoordsRef.current = null;
-          } else {
-            scrollToPosition(0, 0, true);
-          }
-        }
+      const yMaxOffset = contentHeight - height;
+      if (yOffset > yMaxOffset) {
+        scrollToPosition(0, yMaxOffset, true);
       }
     }, [bottomInset, scrollToPosition]);
 
-    const blockScrollToDefaultResetCoords = useCallback(() => {
-      isBlockNextScrollToResetCoordsRef.current = true;
+    const onLayout = useCallback(({
+      nativeEvent: {
+        layout: {
+          height,
+        },
+      },
+    }: LayoutChangeEvent) => {
+      heightRef.current = height;
+    }, []);
+
+    const onContentSizeChange = useCallback((width: number, height: number) => {
+      contentHeightRef.current = height;
     }, []);
 
     const onScrollViewScroll = useCallback((event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const {
         nativeEvent: {
-          contentOffset,
+          contentOffset: {
+            y,
+          },
         },
       } = event;
-      positionRef.current = contentOffset;
+      yOffsetRef.current = y;
       if (onScroll != null) {
         onScroll(event);
       }
@@ -248,7 +216,7 @@ export const KeyboardAdjustedScrollView = memo(
     useLayoutEffect(() => {
       if (animatedValue != null) {
         animatedValue.addListener(({ value }) => {
-          positionRef.current = { x: 0, y: value };
+          yOffsetRef.current = value;
         });
       }
 
@@ -270,8 +238,7 @@ export const KeyboardAdjustedScrollView = memo(
       scrollToFocusedInput,
       scrollToPosition,
       scrollToEnd,
-      blockScrollToDefaultResetCoords,
-    }), [scrollToFocusedInput, scrollToPosition, scrollToEnd, blockScrollToDefaultResetCoords]);
+    }), [scrollToFocusedInput, scrollToPosition, scrollToEnd]);
 
     const contentInset = useMemo(() => ({
       bottom: keyboardSpace,
@@ -290,6 +257,8 @@ export const KeyboardAdjustedScrollView = memo(
       style,
       contentContainerStyle,
       refreshControl,
+      onLayout,
+      onContentSizeChange,
     };
 
     return animatedValue != null ? (
