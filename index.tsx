@@ -71,9 +71,16 @@ export const KeyboardAdjustedScrollView = memo(
     const heightRef = useRef<number>(0);
     const contentHeightRef = useRef<number>(0);
     const yOffsetRef = useRef<number>(0);
+    const keyboardSpaceRef = useRef<number>(bottomInset);
     const scrollViewRef = useRef<ScrollView>(null);
+    const openedKeyboardEventRef = useRef<KeyboardEvent | null>(null);
 
     const [keyboardSpace, setKeyboardSpace] = useState<number>(bottomInset);
+
+    const storeKeyboardSpace = useCallback((nextKeyboardSpace: number) => {
+      setKeyboardSpace(nextKeyboardSpace);
+      keyboardSpaceRef.current = nextKeyboardSpace;
+    }, []);
 
     const getScrollResponder = useCallback((): ScrollView | null => {
       const {
@@ -127,11 +134,16 @@ export const KeyboardAdjustedScrollView = memo(
       scrollToFocusedInput(reactNode, extraHeightWithScrollHeight);
     }, [extraHeight, extraScrollHeight, scrollToFocusedInput]);
 
-    const updateKeyboardSpace = useCallback(({
-      endCoordinates,
-    }: KeyboardEvent) => {
-      const nextKeyboardSpace = endCoordinates.height - bottomOffset;
-      setKeyboardSpace(nextKeyboardSpace);
+    const updateKeyboardSpace = useCallback((keyboardEvent: KeyboardEvent) => {
+      const {
+        endCoordinates,
+      } = keyboardEvent;
+      openedKeyboardEventRef.current = keyboardEvent;
+      const targetKeyboardSpace = endCoordinates.height - bottomOffset;
+      const nextKeyboardSpace = targetKeyboardSpace < 0 ? 0 : targetKeyboardSpace;
+      if (nextKeyboardSpace !== keyboardSpaceRef.current) {
+        storeKeyboardSpace(nextKeyboardSpace);
+      }
       if (extraScrollHeight != null) {
         const currentlyFocusedField = TextInput.State.currentlyFocusedField();
         const responder = getScrollResponder();
@@ -158,7 +170,7 @@ export const KeyboardAdjustedScrollView = memo(
       extraScrollHeight,
       bottomInset,
       extraHeight,
-      setKeyboardSpace,
+      storeKeyboardSpace,
       getScrollResponder,
       scrollToFocusedInputWithNodeHandle,
     ]);
@@ -173,12 +185,13 @@ export const KeyboardAdjustedScrollView = memo(
       const {
         current: yOffset,
       } = yOffsetRef;
-      setKeyboardSpace(bottomInset);
+      openedKeyboardEventRef.current = null;
+      storeKeyboardSpace(bottomInset);
       const yMaxOffset = contentHeight - height;
       if (yOffset > yMaxOffset) {
         scrollToPosition(0, yMaxOffset, true);
       }
-    }, [bottomInset, scrollToPosition]);
+    }, [bottomInset, storeKeyboardSpace, scrollToPosition]);
 
     const onLayout = useCallback(({
       nativeEvent: {
@@ -233,6 +246,15 @@ export const KeyboardAdjustedScrollView = memo(
         keyboardWillHideListener.remove();
       };
     }, [animatedValue, updateKeyboardSpace, resetKeyboardSpace]);
+
+    useLayoutEffect(() => {
+      const {
+        current: openedKeyboardEvent,
+      } = openedKeyboardEventRef;
+      if (openedKeyboardEvent != null) {
+        updateKeyboardSpace(openedKeyboardEvent);
+      }
+    }, [updateKeyboardSpace]);
 
     useImperativeHandle(ref, () => ({
       scrollToFocusedInput,
