@@ -140,7 +140,9 @@ export const KeyboardAdjustedScrollView = memo(
       } = keyboardEvent;
       openedKeyboardEventRef.current = keyboardEvent;
       const targetKeyboardSpace = endCoordinates.height + bottomInset - bottomOffset;
-      const nextKeyboardSpace = targetKeyboardSpace < 0 ? 0 : targetKeyboardSpace;
+      const nextKeyboardSpace = (
+        targetKeyboardSpace < bottomInset ? bottomInset : targetKeyboardSpace
+      );
       if (nextKeyboardSpace !== keyboardSpaceRef.current) {
         storeKeyboardSpace(nextKeyboardSpace);
       }
