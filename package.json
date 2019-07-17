@@ -1,6 +1,6 @@
 {
   "name": "react-native-keyboard-adjusted-scroll-view",
-  "version": "3.3.0",
+  "version": "3.4.0",
   "description": "A React Native ScrollView component that scrolls when the keyboard appears.",
   "main": "index.tsx",
   "repository": {

@@ -139,7 +139,7 @@ export const KeyboardAdjustedScrollView = memo(
         endCoordinates,
       } = keyboardEvent;
       openedKeyboardEventRef.current = keyboardEvent;
-      const targetKeyboardSpace = endCoordinates.height - bottomOffset;
+      const targetKeyboardSpace = endCoordinates.height + bottomInset - bottomOffset;
       const nextKeyboardSpace = targetKeyboardSpace < 0 ? 0 : targetKeyboardSpace;
       if (nextKeyboardSpace !== keyboardSpaceRef.current) {
         storeKeyboardSpace(nextKeyboardSpace);
@@ -187,7 +187,7 @@ export const KeyboardAdjustedScrollView = memo(
       } = yOffsetRef;
       openedKeyboardEventRef.current = null;
       storeKeyboardSpace(bottomInset);
-      const yMaxOffset = contentHeight - height;
+      const yMaxOffset = contentHeight - height + bottomInset;
       if (yOffset > yMaxOffset) {
         scrollToPosition(0, yMaxOffset, true);
       }
@@ -253,8 +253,10 @@ export const KeyboardAdjustedScrollView = memo(
       } = openedKeyboardEventRef;
       if (openedKeyboardEvent != null) {
         updateKeyboardSpace(openedKeyboardEvent);
+      } else {
+        storeKeyboardSpace(bottomInset);
       }
-    }, [updateKeyboardSpace]);
+    }, [bottomInset, storeKeyboardSpace, updateKeyboardSpace]);
 
     useImperativeHandle(ref, () => ({
       scrollToFocusedInput,
