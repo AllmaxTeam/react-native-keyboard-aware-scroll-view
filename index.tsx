@@ -16,6 +16,7 @@ import ReactNative, {
   LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  ScrollViewPropsIOS,
   ScrollViewProps,
   KeyboardEvent,
   TextInput,
@@ -30,6 +31,7 @@ interface Props {
   extraScrollHeight?: number;
   bottomOffset?: number;
   bottomInset?: number;
+  indicatorStyle?: ScrollViewPropsIOS['indicatorStyle'];
   onScroll?: Function;
   animatedValue?: Animated.Value;
   keyboardOpeningTime?: number;
@@ -60,6 +62,7 @@ export const KeyboardAdjustedScrollView = memo(
     bottomOffset = 0,
     bottomInset = 0,
     keyboardOpeningTime = 250,
+    indicatorStyle,
     animatedValue,
     onScroll,
     children,
@@ -278,6 +281,7 @@ export const KeyboardAdjustedScrollView = memo(
       scrollEventThrottle: 1,
       automaticallyAdjustContentInsets: false,
       keyboardShouldPersistTaps: 'handled',
+      indicatorStyle,
       children,
       bounces,
       style,
