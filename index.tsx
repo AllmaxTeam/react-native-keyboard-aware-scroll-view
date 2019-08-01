@@ -40,6 +40,7 @@ interface Props {
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
   refreshControl?: ReactElement;
+  onComponentDidUpdateDuringKeyboardShow?: () => void;
 }
 
 export interface KeyboardAdjustedScrollViewHandle {
@@ -70,7 +71,9 @@ export const KeyboardAdjustedScrollView = memo(
     style,
     contentContainerStyle,
     refreshControl,
+    onComponentDidUpdateDuringKeyboardShow,
   }, ref) => {
+    const isComponentWillUpdateDuringKeyboardShowRef = useRef<boolean>(false);
     const heightRef = useRef<number>(0);
     const contentHeightRef = useRef<number>(0);
     const yOffsetRef = useRef<number>(0);
@@ -154,6 +157,12 @@ export const KeyboardAdjustedScrollView = memo(
         targetKeyboardSpace < bottomInset ? bottomInset : targetKeyboardSpace
       );
       if (nextKeyboardSpace !== keyboardSpaceRef.current) {
+        const {
+          current: isComponentWillUpdateDuringKeyboardShow,
+        } = isComponentWillUpdateDuringKeyboardShowRef;
+        if (!isComponentWillUpdateDuringKeyboardShow) {
+          isComponentWillUpdateDuringKeyboardShowRef.current = true;
+        }
         storeKeyboardSpace(nextKeyboardSpace);
       }
       if (extraScrollHeight != null) {
@@ -199,6 +208,7 @@ export const KeyboardAdjustedScrollView = memo(
       } = yOffsetRef;
       storeKeyboardSpace(bottomInset);
       const yMaxOffset = contentHeight - height + bottomInset;
+      // Reactotron.log({ yOffset, yMaxOffset })
       if (yOffset > yMaxOffset) {
         scrollToPosition(0, yMaxOffset, true);
       }
@@ -283,6 +293,19 @@ export const KeyboardAdjustedScrollView = memo(
         resetKeyboardSpace();
       }
     }, [updateKeyboardSpace, resetKeyboardSpace]);
+
+    useLayoutEffect(() => {
+      const {
+        current: isComponentWillUpdateDuringKeyboardShow,
+      } = isComponentWillUpdateDuringKeyboardShowRef;
+      if (
+        isComponentWillUpdateDuringKeyboardShow
+        && onComponentDidUpdateDuringKeyboardShow != null
+      ) {
+        isComponentWillUpdateDuringKeyboardShowRef.current = false;
+        onComponentDidUpdateDuringKeyboardShow();
+      }
+    }, [keyboardSpace, onComponentDidUpdateDuringKeyboardShow]);
 
     useImperativeHandle(ref, () => ({
       scrollToFocusedInput,
