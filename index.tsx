@@ -21,6 +21,7 @@ import ReactNative, {
   KeyboardEvent,
   TextInput,
   ScrollView,
+  Platform,
   Animated,
   Keyboard,
   UIManager,
@@ -247,65 +248,67 @@ export const KeyboardAdjustedScrollView = memo(
       { useNativeDriver: true },
     ) : undefined), [animatedValue]);
 
-    useLayoutEffect(() => {
-      const keyboardWillShowListener = Keyboard.addListener(
-        'keyboardWillShow',
-        onKeyboardShow,
-      );
-      const keyboardWillHideListener = Keyboard.addListener(
-        'keyboardWillHide',
-        onKeyboardHide,
-      );
-      return () => {
-        keyboardWillShowListener.remove();
-        keyboardWillHideListener.remove();
-      };
-    }, [onKeyboardShow, onKeyboardHide]);
+    if (Platform.OS === 'ios') {
+      useLayoutEffect(() => {
+        const keyboardWillShowListener = Keyboard.addListener(
+          'keyboardWillShow',
+          onKeyboardShow,
+        );
+        const keyboardWillHideListener = Keyboard.addListener(
+          'keyboardWillHide',
+          onKeyboardHide,
+        );
+        return () => {
+          keyboardWillShowListener.remove();
+          keyboardWillHideListener.remove();
+        };
+      }, [onKeyboardShow, onKeyboardHide]);
 
-    useLayoutEffect(() => {
-      if (animatedValue != null) {
-        animatedValue.addListener(({ value }) => {
-          yOffsetRef.current = value;
-        });
-      }
+      useLayoutEffect(() => {
+        if (animatedValue != null) {
+          animatedValue.addListener(({ value }) => {
+            yOffsetRef.current = value;
+          });
+        }
 
-      const keyboardWillShowListener = Keyboard.addListener(
-        'keyboardWillShow',
-        updateKeyboardSpace,
-      );
-      const keyboardWillHideListener = Keyboard.addListener(
-        'keyboardWillHide',
-        resetKeyboardSpace,
-      );
-      return () => {
-        keyboardWillShowListener.remove();
-        keyboardWillHideListener.remove();
-      };
-    }, [animatedValue, updateKeyboardSpace, resetKeyboardSpace]);
+        const keyboardWillShowListener = Keyboard.addListener(
+          'keyboardWillShow',
+          updateKeyboardSpace,
+        );
+        const keyboardWillHideListener = Keyboard.addListener(
+          'keyboardWillHide',
+          resetKeyboardSpace,
+        );
+        return () => {
+          keyboardWillShowListener.remove();
+          keyboardWillHideListener.remove();
+        };
+      }, [animatedValue, updateKeyboardSpace, resetKeyboardSpace]);
 
-    useLayoutEffect(() => {
-      const {
-        current: openedKeyboardEvent,
-      } = openedKeyboardEventRef;
-      if (openedKeyboardEvent != null) {
-        updateKeyboardSpace(openedKeyboardEvent);
-      } else {
-        resetKeyboardSpace();
-      }
-    }, [updateKeyboardSpace, resetKeyboardSpace]);
+      useLayoutEffect(() => {
+        const {
+          current: openedKeyboardEvent,
+        } = openedKeyboardEventRef;
+        if (openedKeyboardEvent != null) {
+          updateKeyboardSpace(openedKeyboardEvent);
+        } else {
+          resetKeyboardSpace();
+        }
+      }, [updateKeyboardSpace, resetKeyboardSpace]);
 
-    useLayoutEffect(() => {
-      const {
-        current: isComponentWillUpdateDuringKeyboardShow,
-      } = isComponentWillUpdateDuringKeyboardShowRef;
-      if (
-        isComponentWillUpdateDuringKeyboardShow
-        && onComponentDidUpdateDuringKeyboardShow != null
-      ) {
-        isComponentWillUpdateDuringKeyboardShowRef.current = false;
-        onComponentDidUpdateDuringKeyboardShow();
-      }
-    }, [keyboardSpace, onComponentDidUpdateDuringKeyboardShow]);
+      useLayoutEffect(() => {
+        const {
+          current: isComponentWillUpdateDuringKeyboardShow,
+        } = isComponentWillUpdateDuringKeyboardShowRef;
+        if (
+          isComponentWillUpdateDuringKeyboardShow
+          && onComponentDidUpdateDuringKeyboardShow != null
+        ) {
+          isComponentWillUpdateDuringKeyboardShowRef.current = false;
+          onComponentDidUpdateDuringKeyboardShow();
+        }
+      }, [keyboardSpace, onComponentDidUpdateDuringKeyboardShow]);
+    }
 
     useImperativeHandle(ref, () => ({
       scrollToFocusedInput,
