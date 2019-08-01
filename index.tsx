@@ -137,11 +137,18 @@ export const KeyboardAdjustedScrollView = memo(
       scrollToFocusedInput(reactNode, extraHeightWithScrollHeight);
     }, [extraHeight, extraScrollHeight, scrollToFocusedInput]);
 
+    const onKeyboardShow = useCallback((keyboardEvent: KeyboardEvent) => {
+      openedKeyboardEventRef.current = keyboardEvent;
+    }, []);
+
+    const onKeyboardHide = useCallback(() => {
+      openedKeyboardEventRef.current = null;
+    }, []);
+
     const updateKeyboardSpace = useCallback((keyboardEvent: KeyboardEvent) => {
       const {
         endCoordinates,
       } = keyboardEvent;
-      openedKeyboardEventRef.current = keyboardEvent;
       const targetKeyboardSpace = endCoordinates.height + bottomInset - bottomOffset;
       const nextKeyboardSpace = (
         targetKeyboardSpace < bottomInset ? bottomInset : targetKeyboardSpace
@@ -190,7 +197,6 @@ export const KeyboardAdjustedScrollView = memo(
       const {
         current: yOffset,
       } = yOffsetRef;
-      openedKeyboardEventRef.current = null;
       storeKeyboardSpace(bottomInset);
       const yMaxOffset = contentHeight - height + bottomInset;
       if (yOffset > yMaxOffset) {
@@ -232,6 +238,21 @@ export const KeyboardAdjustedScrollView = memo(
     ) : undefined), [animatedValue]);
 
     useLayoutEffect(() => {
+      const keyboardWillShowListener = Keyboard.addListener(
+        'keyboardWillShow',
+        onKeyboardShow,
+      );
+      const keyboardWillHideListener = Keyboard.addListener(
+        'keyboardWillHide',
+        onKeyboardHide,
+      );
+      return () => {
+        keyboardWillShowListener.remove();
+        keyboardWillHideListener.remove();
+      };
+    }, [onKeyboardShow, onKeyboardHide]);
+
+    useLayoutEffect(() => {
       if (animatedValue != null) {
         animatedValue.addListener(({ value }) => {
           yOffsetRef.current = value;
@@ -259,9 +280,9 @@ export const KeyboardAdjustedScrollView = memo(
       if (openedKeyboardEvent != null) {
         updateKeyboardSpace(openedKeyboardEvent);
       } else {
-        storeKeyboardSpace(bottomInset);
+        resetKeyboardSpace();
       }
-    }, [bottomInset, storeKeyboardSpace, updateKeyboardSpace]);
+    }, [updateKeyboardSpace, resetKeyboardSpace]);
 
     useImperativeHandle(ref, () => ({
       scrollToFocusedInput,
