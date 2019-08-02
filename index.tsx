@@ -9,6 +9,7 @@ import React, {
   useCallback,
   useMemo,
   useLayoutEffect,
+  useEffect,
   useImperativeHandle,
 } from 'react';
 import ReactNative, {
@@ -42,6 +43,7 @@ interface Props {
   contentContainerStyle?: ViewStyle;
   refreshControl?: ReactElement;
   onComponentDidUpdateDuringKeyboardShow?: () => void;
+  onComponentDidUpdateWhenKeyboardNotShown?: () => void;
 }
 
 export interface KeyboardAdjustedScrollViewHandle {
@@ -73,8 +75,10 @@ export const KeyboardAdjustedScrollView = memo(
     contentContainerStyle,
     refreshControl,
     onComponentDidUpdateDuringKeyboardShow,
+    onComponentDidUpdateWhenKeyboardNotShown,
   }, ref) => {
     const isComponentWillUpdateDuringKeyboardShowRef = useRef<boolean>(false);
+    const isComponentWillUpdateWhenKeyboardNotShownRef = useRef<boolean>(false);
     const heightRef = useRef<number>(0);
     const contentHeightRef = useRef<number>(0);
     const yOffsetRef = useRef<number>(0);
@@ -207,9 +211,9 @@ export const KeyboardAdjustedScrollView = memo(
       const {
         current: yOffset,
       } = yOffsetRef;
+      isComponentWillUpdateWhenKeyboardNotShownRef.current = true;
       storeKeyboardSpace(bottomInset);
       const yMaxOffset = contentHeight - height + bottomInset;
-      // Reactotron.log({ yOffset, yMaxOffset })
       if (yOffset > yMaxOffset) {
         scrollToPosition(0, yMaxOffset, true);
       }
@@ -308,6 +312,19 @@ export const KeyboardAdjustedScrollView = memo(
           onComponentDidUpdateDuringKeyboardShow();
         }
       }, [keyboardSpace, onComponentDidUpdateDuringKeyboardShow]);
+
+      useEffect(() => {
+        const {
+          current: isComponentWillUpdateWhenKeyboardNotShown,
+        } = isComponentWillUpdateWhenKeyboardNotShownRef;
+        if (
+          isComponentWillUpdateWhenKeyboardNotShown
+          && onComponentDidUpdateWhenKeyboardNotShown != null
+        ) {
+          isComponentWillUpdateWhenKeyboardNotShownRef.current = false;
+          onComponentDidUpdateWhenKeyboardNotShown();
+        }
+      }, [keyboardSpace, onComponentDidUpdateWhenKeyboardNotShown]);
     }
 
     useImperativeHandle(ref, () => ({
